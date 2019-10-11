@@ -1,0 +1,10 @@
+server:
+  applicationConnectors:
+    - type: http
+      port: 5510
+  adminConnectors:
+    - type: http
+      port: 5511
+
+
+redisURI: "192.168.204.170:6379"
