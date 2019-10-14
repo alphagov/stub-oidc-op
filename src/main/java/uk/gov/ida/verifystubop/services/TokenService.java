@@ -1,9 +1,18 @@
 package uk.gov.ida.verifystubop.services;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.PlainHeader;
+import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.PlainJWT;
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.langtag.LangTag;
 import com.nimbusds.langtag.LangTagException;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
@@ -13,6 +22,7 @@ import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.openid.connect.sdk.claims.CodeHash;
 import com.nimbusds.openid.connect.sdk.claims.Gender;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
@@ -37,27 +47,45 @@ public class TokenService {
         this.configuration = configuration;
     }
 
-    public AuthorizationCode generateTokensAndGetAuthCode() {
+    public JWT generateAndGetIdToken(AuthorizationCode authCode) {
 
+        CodeHash cHash = CodeHash.compute(authCode, JWSAlgorithm.RS256);
         IDTokenClaimsSet idTokenClaimsSet = new IDTokenClaimsSet(
                 new Issuer("iss"),
                 new Subject("sub"),
                 Arrays.asList(new Audience("aud")),
                 new Date(),
                 new Date());
-
+        idTokenClaimsSet.setCodeHash(cHash);
         JWTClaimsSet jwtClaimsSet;
         try {
             jwtClaimsSet = idTokenClaimsSet.toJWTClaimsSet();
         } catch (ParseException e) {
             throw new RuntimeException("Unable to parse IDTokenClaimsSet to JWTClaimsSet", e);
         }
-        //The ID Token will probably need to be signed, although this is fine for now
-        JWT idToken = new PlainJWT(jwtClaimsSet);
-        AuthorizationCode authCode = new AuthorizationCode();
+
+        RSAKey signingKey = createSigningKey();
+        JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(signingKey.getKeyID()).build();
+        SignedJWT idToken;
+
+        try {
+            JWSSigner signer = new RSASSASigner(signingKey);
+            idToken = new SignedJWT(jwsHeader, jwtClaimsSet);
+            idToken.sign(signer);
+        } catch (JOSEException e) {
+            throw new RuntimeException();
+        }
+
         AccessToken accessToken = new BearerAccessToken();
         storeTokens(idToken, accessToken, authCode);
         createUserInfo(accessToken);
+
+        return idToken;
+    }
+
+    public AuthorizationCode getAuthorizationCode() {
+
+        AuthorizationCode authCode = new AuthorizationCode();
         return authCode;
     }
 
@@ -75,6 +103,14 @@ public class TokenService {
             return new UserInfo(new JSONObject(JSONObjectUtils.parse(serialisedUserInfo)));
         } catch (java.text.ParseException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private RSAKey createSigningKey() {
+        try {
+            return new RSAKeyGenerator(2048).keyID("123").generate();
+        } catch (JOSEException e) {
+            throw new RuntimeException("Unable to create RSA key");
         }
     }
 

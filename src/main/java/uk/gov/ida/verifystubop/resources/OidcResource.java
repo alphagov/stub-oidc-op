@@ -1,8 +1,8 @@
 package uk.gov.ida.verifystubop.resources;
 
+import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
@@ -10,6 +10,7 @@ import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.gov.ida.verifystubop.services.RequestValidationService;
 import uk.gov.ida.verifystubop.services.TokenService;
 
 import javax.validation.constraints.NotNull;
@@ -46,18 +47,23 @@ public class OidcResource {
         try {
             AuthenticationRequest authenticationRequest = AuthenticationRequest.parse(uri);
 
-            AuthorizationCode authorizationCode = tokenService.generateTokensAndGetAuthCode();
+            RequestValidationService.validateRequestType(authenticationRequest);
+
+            AuthorizationCode authorizationCode = tokenService.getAuthorizationCode();
+
+            JWT idToken = tokenService.generateAndGetIdToken(authorizationCode);
 
             AuthenticationSuccessResponse successResponse =
                     new AuthenticationSuccessResponse(
                             authenticationRequest.getRedirectionURI(),
                             authorizationCode,
-                            null,
+                            idToken,
                             null,
                             authenticationRequest.getState(),
                             null,
                             null
                     );
+            LOG.info("Success Response URI: " + successResponse.toURI().toString());
             return Response.status(302).location(successResponse.toURI()).build();
         } catch (ParseException e) {
             throw new RuntimeException("Unable to parse URI: " + uri.toString() + " to authentication request", e);
