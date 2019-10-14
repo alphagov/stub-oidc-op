@@ -8,6 +8,8 @@ import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.gov.ida.verifystubop.services.TokenService;
 
 import javax.validation.constraints.NotNull;
@@ -28,6 +30,8 @@ import java.net.URI;
 public class OidcResource {
 
     private TokenService tokenService;
+    private static final Logger LOG = LoggerFactory.getLogger(OidcResource.class);
+
 
     public OidcResource(TokenService tokenService) {
         this.tokenService = tokenService;
@@ -76,11 +80,11 @@ public class OidcResource {
     @Path("/userinfo")
     public Response getUserInfo(@HeaderParam("Authorization") @NotNull String authorizationHeader) {
         try {
+            LOG.info("Received request to get User Info");
             //This will need to be used to get the user info but we're not using it for now
             AccessToken accessToken = AccessToken.parse(authorizationHeader);
 
-            UserInfo userInfo = new UserInfo(new Subject("subject"));
-
+            UserInfo userInfo = tokenService.getUserInfo(accessToken);
             return Response.ok(userInfo.toJSONObject()).build();
         } catch (ParseException e) {
             throw new RuntimeException("Unable to parse authorization header: " + authorizationHeader + " to access token", e);
