@@ -7,7 +7,8 @@ cd "$(dirname "$0")"
 
 ./gradlew installDist
 
-docker run --name localredis -d -p 6379:6379 --rm redis
+trap "docker container stop opRedis" EXIT
+docker run --name opRedis -d -p 6379:6379 --rm redis
 
 
 
