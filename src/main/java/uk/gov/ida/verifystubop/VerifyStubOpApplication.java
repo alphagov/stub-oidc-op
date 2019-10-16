@@ -17,7 +17,7 @@ public class VerifyStubOpApplication extends Application<VerifyStubOpConfigurati
     public void run(VerifyStubOpConfiguration configuration, Environment environment) {
         RedisService redisService = new RedisService(configuration);
 
-        TokenService tokenService = new TokenService(redisService, configuration);
+        TokenService tokenService = new TokenService(redisService);
 
         environment.jersey().register(new OidcResource(tokenService));
     }

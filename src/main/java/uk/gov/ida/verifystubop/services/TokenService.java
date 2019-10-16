@@ -4,17 +4,13 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.PlainHeader;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.PlainJWT;
 import com.nimbusds.jwt.SignedJWT;
-import com.nimbusds.langtag.LangTag;
-import com.nimbusds.langtag.LangTagException;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.id.Audience;
@@ -22,6 +18,7 @@ import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.claims.CodeHash;
 import com.nimbusds.openid.connect.sdk.claims.Gender;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
@@ -30,7 +27,6 @@ import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import net.minidev.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.gov.ida.verifystubop.configuration.VerifyStubOpConfiguration;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -39,24 +35,24 @@ public class TokenService {
 
     private static final Logger LOG = LoggerFactory.getLogger(TokenService.class);
 
+    private static final String ISSUER = "verify-stub-op";
     private RedisService redisService;
-    private VerifyStubOpConfiguration configuration;
 
-    public TokenService(RedisService redisService, VerifyStubOpConfiguration configuration) {
+    public TokenService(RedisService redisService) {
         this.redisService = redisService;
-        this.configuration = configuration;
     }
 
-    public JWT generateAndGetIdToken(AuthorizationCode authCode) {
+    public JWT generateAndGetIdToken(AuthorizationCode authCode, AuthenticationRequest authRequest) {
 
         CodeHash cHash = CodeHash.compute(authCode, JWSAlgorithm.RS256);
         IDTokenClaimsSet idTokenClaimsSet = new IDTokenClaimsSet(
-                new Issuer("iss"),
-                new Subject("sub"),
-                Arrays.asList(new Audience("aud")),
+                new Issuer(ISSUER),
+                new Subject(),
+                Arrays.asList(new Audience(authRequest.getClientID())),
                 new Date(),
                 new Date());
         idTokenClaimsSet.setCodeHash(cHash);
+        idTokenClaimsSet.setNonce(authRequest.getNonce());
         JWTClaimsSet jwtClaimsSet;
         try {
             jwtClaimsSet = idTokenClaimsSet.toJWTClaimsSet();

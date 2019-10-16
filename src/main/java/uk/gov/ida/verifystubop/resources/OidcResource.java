@@ -51,7 +51,7 @@ public class OidcResource {
 
             AuthorizationCode authorizationCode = tokenService.getAuthorizationCode();
 
-            JWT idToken = tokenService.generateAndGetIdToken(authorizationCode);
+            JWT idToken = tokenService.generateAndGetIdToken(authorizationCode, authenticationRequest);
 
             AuthenticationSuccessResponse successResponse =
                     new AuthenticationSuccessResponse(
