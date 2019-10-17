@@ -79,17 +79,23 @@ public class TokenService {
         return idToken;
     }
 
+    public OIDCTokens getTokens(AuthorizationCode authCode) {
+
+        String tokens = redisService.get(authCode.getValue());
+
+        JSONObject jsonObject;
+        try {
+            jsonObject = new JSONObject(JSONObjectUtils.parse(tokens));
+            return OIDCTokens.parse(jsonObject);
+        } catch (java.text.ParseException | ParseException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public AuthorizationCode getAuthorizationCode() {
 
         AuthorizationCode authCode = new AuthorizationCode();
         return authCode;
-    }
-
-    private void storeTokens(JWT idToken, AccessToken accessToken, AuthorizationCode authCode) {
-
-        OIDCTokens oidcTokens = new OIDCTokens(idToken, accessToken, null);
-
-        redisService.set(authCode.getValue(), oidcTokens.toJSONObject().toJSONString());
     }
 
     public UserInfo getUserInfo(AccessToken accessToken) {
@@ -100,6 +106,13 @@ public class TokenService {
         } catch (java.text.ParseException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void storeTokens(JWT idToken, AccessToken accessToken, AuthorizationCode authCode) {
+
+        OIDCTokens oidcTokens = new OIDCTokens(idToken, accessToken, null);
+
+        redisService.set(authCode.getValue(), oidcTokens.toJSONObject().toJSONString());
     }
 
     private RSAKey createSigningKey() {
@@ -119,18 +132,5 @@ public class TokenService {
         userInfo.setPhoneNumber("01234567890");
         userInfo.setPhoneNumberVerified(false);
         redisService.set(accessToken.getValue(), userInfo.toJSONObject().toJSONString());
-    }
-
-    public OIDCTokens getTokens(AuthorizationCode authCode) {
-
-        String tokens = redisService.get(authCode.getValue());
-
-        JSONObject jsonObject;
-        try {
-            jsonObject = new JSONObject(JSONObjectUtils.parse(tokens));
-            return OIDCTokens.parse(jsonObject);
-        } catch (java.text.ParseException | ParseException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

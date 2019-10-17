@@ -5,33 +5,36 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
+import io.dropwizard.views.View;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.ida.verifystubop.services.RequestValidationService;
 import uk.gov.ida.verifystubop.services.TokenService;
+import uk.gov.ida.verifystubop.views.ResponseView;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 
-@Path("/")
-public class OidcResource {
+@Path("/formPost")
+public class OidcFormPostResource {
 
     private TokenService tokenService;
-    private static final Logger LOG = LoggerFactory.getLogger(OidcResource.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OidcFormPostResource.class);
 
-
-    public OidcResource(TokenService tokenService) {
+    public OidcFormPostResource(TokenService tokenService) {
         this.tokenService = tokenService;
     }
 
     //TODO: The spec states there should be a post method for this endpoint as well
     @GET
     @Path("/authorize")
-    public Response authorize(@Context UriInfo uriInfo) {
+    @Produces(MediaType.TEXT_HTML)
+    public View authorize(@Context UriInfo uriInfo) {
         URI uri = uriInfo.getRequestUri();
 
         try {
@@ -54,7 +57,7 @@ public class OidcResource {
                             null
                     );
             LOG.info("Success Response URI: " + successResponse.toURI().toString());
-            return Response.status(302).location(successResponse.toURI()).build();
+            return new ResponseView(authenticationRequest.getState(), authorizationCode, idToken, authenticationRequest.getRedirectionURI());
         } catch (ParseException e) {
             throw new RuntimeException("Unable to parse URI: " + uri.toString() + " to authentication request", e);
         }
