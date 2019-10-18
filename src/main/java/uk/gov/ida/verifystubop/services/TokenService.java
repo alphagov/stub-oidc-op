@@ -17,8 +17,8 @@ import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
-import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import com.nimbusds.openid.connect.sdk.claims.AccessTokenHash;
 import com.nimbusds.openid.connect.sdk.claims.CodeHash;
 import com.nimbusds.openid.connect.sdk.claims.Gender;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
@@ -42,9 +42,10 @@ public class TokenService {
         this.redisService = redisService;
     }
 
-    public JWT generateAndGetIdToken(AuthorizationCode authCode, AuthenticationRequest authRequest) {
+    public JWT generateAndGetIdToken(AuthorizationCode authCode, AuthenticationRequest authRequest, AccessToken accessToken) {
 
         CodeHash cHash = CodeHash.compute(authCode, JWSAlgorithm.RS256);
+        AccessTokenHash aHash = AccessTokenHash.compute(accessToken, JWSAlgorithm.RS256);
         IDTokenClaimsSet idTokenClaimsSet = new IDTokenClaimsSet(
                 new Issuer(ISSUER),
                 new Subject(),
@@ -53,6 +54,7 @@ public class TokenService {
                 new Date());
         idTokenClaimsSet.setCodeHash(cHash);
         idTokenClaimsSet.setNonce(authRequest.getNonce());
+        idTokenClaimsSet.setAccessTokenHash(aHash);
         JWTClaimsSet jwtClaimsSet;
         try {
             jwtClaimsSet = idTokenClaimsSet.toJWTClaimsSet();
@@ -72,7 +74,6 @@ public class TokenService {
             throw new RuntimeException();
         }
 
-        AccessToken accessToken = new BearerAccessToken();
         storeTokens(idToken, accessToken, authCode);
         createUserInfo(accessToken);
 

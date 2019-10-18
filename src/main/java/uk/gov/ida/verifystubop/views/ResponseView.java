@@ -3,6 +3,7 @@ package uk.gov.ida.verifystubop.views;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.id.State;
+import com.nimbusds.oauth2.sdk.token.AccessToken;
 import io.dropwizard.views.View;
 
 import java.net.URI;
@@ -13,6 +14,7 @@ public class ResponseView extends View {
     private final AuthorizationCode authCode;
     private final JWT idToken;
     private final URI redirectURI;
+    private AccessToken accessToken;
 
     public ResponseView(State state, AuthorizationCode authCode, JWT idToken, URI redirectURI) {
         super("response.mustache");
@@ -21,6 +23,13 @@ public class ResponseView extends View {
         this.authCode = authCode;
         this.idToken = idToken;
         this.redirectURI = redirectURI;
+    }
+
+    public ResponseView(State state, AuthorizationCode authCode, JWT idToken, URI redirectURI, AccessToken accessToken) {
+
+        this(state, authCode, idToken, redirectURI);
+
+        this.accessToken = accessToken;
     }
 
     public String getState() {
@@ -37,5 +46,12 @@ public class ResponseView extends View {
 
     public String getRedirectURI() {
         return redirectURI.toString();
+    }
+
+    public String getAccessToken() {
+        if (accessToken == null) {
+            return "";
+        }
+        return accessToken.toJSONString();
     }
 }

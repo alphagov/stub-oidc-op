@@ -1,7 +1,5 @@
 package uk.gov.ida.verifystubop.resources;
 
-import com.nimbusds.jwt.JWT;
-import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
@@ -9,7 +7,6 @@ import io.dropwizard.views.View;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.ida.verifystubop.services.RequestValidationService;
-import uk.gov.ida.verifystubop.services.TokenService;
 import uk.gov.ida.verifystubop.views.ResponseView;
 
 import javax.ws.rs.GET;
@@ -23,11 +20,11 @@ import java.net.URI;
 @Path("/formPost")
 public class OidcFormPostResource {
 
-    private TokenService tokenService;
+    private final RequestValidationService requestValidationService;
     private static final Logger LOG = LoggerFactory.getLogger(OidcFormPostResource.class);
 
-    public OidcFormPostResource(TokenService tokenService) {
-        this.tokenService = tokenService;
+    public OidcFormPostResource(RequestValidationService requestValidationService) {
+        this.requestValidationService = requestValidationService;
     }
 
     //TODO: The spec states there should be a post method for this endpoint as well
@@ -40,24 +37,15 @@ public class OidcFormPostResource {
         try {
             AuthenticationRequest authenticationRequest = AuthenticationRequest.parse(uri);
 
-            RequestValidationService.validateRequestType(authenticationRequest);
+            AuthenticationSuccessResponse authenticationResponse = requestValidationService.handleAuthenticationRequest(authenticationRequest);
 
-            AuthorizationCode authorizationCode = tokenService.getAuthorizationCode();
+            return new ResponseView(
+                    authenticationRequest.getState(),
+                    authenticationResponse.getAuthorizationCode(),
+                    authenticationResponse.getIDToken(),
+                    authenticationRequest.getRedirectionURI(),
+                    authenticationResponse.getAccessToken());
 
-            JWT idToken = tokenService.generateAndGetIdToken(authorizationCode, authenticationRequest);
-
-            AuthenticationSuccessResponse successResponse =
-                    new AuthenticationSuccessResponse(
-                            authenticationRequest.getRedirectionURI(),
-                            authorizationCode,
-                            idToken,
-                            null,
-                            authenticationRequest.getState(),
-                            null,
-                            null
-                    );
-            LOG.info("Success Response URI: " + successResponse.toURI().toString());
-            return new ResponseView(authenticationRequest.getState(), authorizationCode, idToken, authenticationRequest.getRedirectionURI());
         } catch (ParseException e) {
             throw new RuntimeException("Unable to parse URI: " + uri.toString() + " to authentication request", e);
         }

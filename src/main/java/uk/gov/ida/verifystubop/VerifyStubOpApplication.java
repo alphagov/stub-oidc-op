@@ -9,6 +9,7 @@ import uk.gov.ida.verifystubop.resources.OidcFormPostResource;
 import uk.gov.ida.verifystubop.resources.OidcResource;
 import uk.gov.ida.verifystubop.resources.TokenResource;
 import uk.gov.ida.verifystubop.services.RedisService;
+import uk.gov.ida.verifystubop.services.RequestValidationService;
 import uk.gov.ida.verifystubop.services.TokenService;
 
 public class VerifyStubOpApplication extends Application<VerifyStubOpConfiguration> {
@@ -23,9 +24,11 @@ public class VerifyStubOpApplication extends Application<VerifyStubOpConfigurati
 
         TokenService tokenService = new TokenService(redisService);
 
-        environment.jersey().register(new OidcResource(tokenService));
+        RequestValidationService requestValidationService = new RequestValidationService(tokenService);
+
+        environment.jersey().register(new OidcResource(requestValidationService));
         environment.jersey().register(new TokenResource(tokenService));
-        environment.jersey().register(new OidcFormPostResource(tokenService));
+        environment.jersey().register(new OidcFormPostResource(requestValidationService));
     }
 
     @Override
