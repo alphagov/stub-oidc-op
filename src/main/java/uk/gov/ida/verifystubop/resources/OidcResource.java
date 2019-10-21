@@ -2,7 +2,7 @@ package uk.gov.ida.verifystubop.resources;
 
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
-import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
+import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.ida.verifystubop.services.RequestValidationService;
@@ -34,11 +34,14 @@ public class OidcResource {
         try {
             AuthenticationRequest authenticationRequest = AuthenticationRequest.parse(uri);
 
-            AuthenticationSuccessResponse successResponse = requestValidationService.handleAuthenticationRequest(authenticationRequest);
+            AuthenticationResponse response = requestValidationService.handleAuthenticationRequest(authenticationRequest);
 
-            LOG.info("Success Response URI: " + successResponse.toURI().toString());
+            if (!response.indicatesSuccess()) {
+                return Response.status(302).location(response.toErrorResponse().toURI()).build();
+            } else {
+                return Response.status(302).location(response.toSuccessResponse().toURI()).build();
+            }
 
-            return Response.status(302).location(successResponse.toURI()).build();
         } catch (ParseException e) {
             throw new RuntimeException("Unable to parse URI: " + uri.toString() + " to authentication request", e);
         }

@@ -1,12 +1,15 @@
 package uk.gov.ida.verifystubop.resources;
 
 import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import io.dropwizard.views.View;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.ida.verifystubop.services.RequestValidationService;
+import uk.gov.ida.verifystubop.views.ErrorResponseView;
 import uk.gov.ida.verifystubop.views.ResponseView;
 
 import javax.ws.rs.GET;
@@ -37,14 +40,25 @@ public class OidcFormPostResource {
         try {
             AuthenticationRequest authenticationRequest = AuthenticationRequest.parse(uri);
 
-            AuthenticationSuccessResponse authenticationResponse = requestValidationService.handleAuthenticationRequest(authenticationRequest);
+            AuthenticationResponse response = requestValidationService.handleAuthenticationRequest(authenticationRequest);
 
-            return new ResponseView(
-                    authenticationRequest.getState(),
-                    authenticationResponse.getAuthorizationCode(),
-                    authenticationResponse.getIDToken(),
-                    authenticationRequest.getRedirectionURI(),
-                    authenticationResponse.getAccessToken());
+            if (!response.indicatesSuccess()) {
+                AuthenticationErrorResponse errorResponse = response.toErrorResponse();
+                return new ErrorResponseView(
+                        errorResponse.getErrorObject().getCode(),
+                        errorResponse.getErrorObject().getDescription(),
+                        errorResponse.getErrorObject().getHTTPStatusCode(),
+                        errorResponse.getState(),
+                        errorResponse.getRedirectionURI());
+            } else {
+                AuthenticationSuccessResponse successResponse = response.toSuccessResponse();
+                return new ResponseView(
+                        authenticationRequest.getState(),
+                        successResponse.getAuthorizationCode(),
+                        successResponse.getIDToken(),
+                        authenticationRequest.getRedirectionURI(),
+                        successResponse.getAccessToken());
+            }
 
         } catch (ParseException e) {
             throw new RuntimeException("Unable to parse URI: " + uri.toString() + " to authentication request", e);
