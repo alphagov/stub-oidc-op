@@ -50,8 +50,8 @@ public class ResponseView extends View {
 
     public String getAccessToken() {
         if (accessToken == null) {
-            return "";
+            return null;
         }
-        return accessToken.toJSONString();
+        return accessToken.toString();
     }
 }
