@@ -13,7 +13,7 @@ public class RedisService {
     }
 
     public void startup(VerifyStubOpConfiguration config) {
-        RedisClient client = RedisClient.create("redis://" + config.getRedisURI() + "/0");
+        RedisClient client = RedisClient.create("redis://" + config.getRedisURI());
         commands = client.connect().sync();
     }
 

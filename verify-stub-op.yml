@@ -7,4 +7,4 @@ server:
       port: 5511
 
 
-redisURI: "192.168.204.170:6379"
+redisURI: ${REDIS_URI:-192.168.204.170:6379/0}
