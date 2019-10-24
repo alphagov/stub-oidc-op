@@ -1,4 +1,4 @@
-package uk.gov.ida.verifystubop;
+package uk.gov.ida.stuboidcop;
 
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -6,22 +6,22 @@ import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
-import uk.gov.ida.verifystubop.configuration.VerifyStubOpConfiguration;
-import uk.gov.ida.verifystubop.resources.OidcFormPostResource;
-import uk.gov.ida.verifystubop.resources.OidcResource;
-import uk.gov.ida.verifystubop.resources.TokenResource;
-import uk.gov.ida.verifystubop.services.RedisService;
-import uk.gov.ida.verifystubop.services.RequestValidationService;
-import uk.gov.ida.verifystubop.services.TokenService;
+import uk.gov.ida.stuboidcop.configuration.StubOidcOpConfiguration;
+import uk.gov.ida.stuboidcop.resources.OidcFormPostResource;
+import uk.gov.ida.stuboidcop.resources.OidcResource;
+import uk.gov.ida.stuboidcop.resources.TokenResource;
+import uk.gov.ida.stuboidcop.services.RedisService;
+import uk.gov.ida.stuboidcop.services.RequestValidationService;
+import uk.gov.ida.stuboidcop.services.TokenService;
 
-public class VerifyStubOpApplication extends Application<VerifyStubOpConfiguration> {
+public class StubOidcOpApplication extends Application<StubOidcOpConfiguration> {
 
     public static void main(String[] args) throws Exception {
-        new VerifyStubOpApplication().run(args);
+        new StubOidcOpApplication().run(args);
     }
 
     @Override
-    public void run(VerifyStubOpConfiguration configuration, Environment environment) {
+    public void run(StubOidcOpConfiguration configuration, Environment environment) {
         RedisService redisService = new RedisService(configuration);
 
         TokenService tokenService = new TokenService(redisService);
@@ -34,7 +34,7 @@ public class VerifyStubOpApplication extends Application<VerifyStubOpConfigurati
     }
 
     @Override
-    public void initialize(final Bootstrap<VerifyStubOpConfiguration> bootstrap) {
+    public void initialize(final Bootstrap<StubOidcOpConfiguration> bootstrap) {
         bootstrap.addBundle(new ViewBundle<>());
         bootstrap.setConfigurationSourceProvider(
                 new SubstitutingSourceProvider(

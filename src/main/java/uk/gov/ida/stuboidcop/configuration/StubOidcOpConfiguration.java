@@ -1,8 +1,8 @@
-package uk.gov.ida.verifystubop.configuration;
+package uk.gov.ida.stuboidcop.configuration;
 
 import io.dropwizard.Configuration;
 
-public class VerifyStubOpConfiguration extends Configuration {
+public class StubOidcOpConfiguration extends Configuration {
 
     private String redisURI;
 

@@ -1,4 +1,4 @@
-package uk.gov.ida.verifystubop.resources;
+package uk.gov.ida.stuboidcop.resources;
 
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
@@ -8,9 +8,9 @@ import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import io.dropwizard.views.View;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.gov.ida.verifystubop.services.RequestValidationService;
-import uk.gov.ida.verifystubop.views.ErrorResponseView;
-import uk.gov.ida.verifystubop.views.ResponseView;
+import uk.gov.ida.stuboidcop.services.RequestValidationService;
+import uk.gov.ida.stuboidcop.views.ErrorResponseView;
+import uk.gov.ida.stuboidcop.views.ResponseView;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

@@ -1,4 +1,4 @@
-package uk.gov.ida.verifystubop.services;
+package uk.gov.ida.stuboidcop.services;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -35,7 +35,7 @@ public class TokenService {
 
     private static final Logger LOG = LoggerFactory.getLogger(TokenService.class);
 
-    private static final String ISSUER = "verify-stub-op";
+    private static final String ISSUER = "stub-oidc-op";
     private RedisService redisService;
 
     public TokenService(RedisService redisService) {

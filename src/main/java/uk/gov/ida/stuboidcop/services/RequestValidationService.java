@@ -1,4 +1,4 @@
-package uk.gov.ida.verifystubop.services;
+package uk.gov.ida.stuboidcop.services;
 
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;

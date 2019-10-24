@@ -1,4 +1,4 @@
-package uk.gov.ida.verifystubop.resources;
+package uk.gov.ida.stuboidcop.resources;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -7,7 +7,7 @@ import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.gov.ida.verifystubop.services.TokenService;
+import uk.gov.ida.stuboidcop.services.TokenService;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;

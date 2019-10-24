@@ -1,4 +1,4 @@
-package uk.gov.ida.verifystubop.views;
+package uk.gov.ida.stuboidcop.views;
 
 import com.nimbusds.oauth2.sdk.id.State;
 import io.dropwizard.views.View;

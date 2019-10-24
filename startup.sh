@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-CONFIG_FILE=./verify-stub-op.yml
+CONFIG_FILE=./stub-oidc-op.yml
 
 cd "$(dirname "$0")"
 
@@ -12,4 +12,4 @@ docker run --name opRedis -d -p 6379:6379 --rm redis
 
 
 
-./build/install/verify-stub-op/bin/verify-stub-op server $CONFIG_FILE
+./build/install/stub-oidc-op/bin/stub-oidc-op server $CONFIG_FILE
