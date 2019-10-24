@@ -4,7 +4,7 @@ Stub OIDC OP is a very simple stub implementation of an OpenID Connect Provider 
 
 Stub OIDC OP uses Redis to store the authentication code, access token and ID token.
 
-You can find the Stub OpenID Client [here](https://github.com/alphagov/stub-op-client)
+You can find the Stub OpenID Client [here](https://github.com/alphagov/stub-oidc-client)
 
 ### Stub OIDC OP can currently peforms 3 main functions 
 * Receives an Authentication Request from a Client and return back an Authentication Code, ID Token and Access Token so the client can perform validation as per the Open ID Connect Spec.  
