@@ -16,6 +16,10 @@ You can find the Stub OpenID Client [here](https://github.com/alphagov/stub-oidc
 * Change the IP address on the redisURI property in stub-oidc-op.yml to that of your local machine.
 * Run startup.sh
 
+### Stub OIDC OP runs on the PAAS 
+* To deploy Stub OIDC OP simply login to the PAAS and select the build-learn space. 
+* Run './gradlew pushToPaas' and this will deploy the app.
+
 ### For more information about Open ID Connect - 
 * Open ID Connect Spec - https://openid.net/specs/openid-connect-core-1_0.html
 * Diagrams of all the OpenID Connect flows - https://medium.com/@darutk/diagrams-of-all-the-openid-connect-flows-6968e3990660
