@@ -13,7 +13,7 @@ You can find the Stub OpenID Client [here](https://github.com/alphagov/stub-oidc
 
 
 ### To start up stub-oidc-op
-* Change the IP address on the redisURI property in stub-oidc-op.yml to that of your local machine.
+* Ensure you have [Stub OIDC Client](https://github.com/alphagov/stub-oidc-client) up and running
 * Run startup.sh
 
 ### Stub OIDC OP runs on the PAAS 
