@@ -3,7 +3,6 @@ apply plugin: 'application'
 apply plugin: 'idea'
 
 group 'uk.gov.ida'
-sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
@@ -33,7 +32,10 @@ dependencies {
         "io.dropwizard:dropwizard-core:$dropwizardVersion",
         "javax.xml.bind:jaxb-api:2.3.0",
         "io.lettuce:lettuce-core:5.2.0.RELEASE",
-        "io.dropwizard:dropwizard-views-mustache:$dropwizardVersion"
+        "io.dropwizard:dropwizard-views-mustache:$dropwizardVersion",
+        "com.auth0:java-jwt:3.8.3",
+        "commons-io:commons-io:2.6"
+
     )
 
     testCompile(

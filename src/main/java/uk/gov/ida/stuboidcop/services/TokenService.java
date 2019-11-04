@@ -43,7 +43,6 @@ public class TokenService {
     }
 
     public JWT generateAndGetIdToken(AuthorizationCode authCode, AuthenticationRequest authRequest, AccessToken accessToken) {
-
         CodeHash cHash = CodeHash.compute(authCode, JWSAlgorithm.RS256);
         AccessTokenHash aHash = AccessTokenHash.compute(accessToken, JWSAlgorithm.RS256);
         IDTokenClaimsSet idTokenClaimsSet = new IDTokenClaimsSet(
