@@ -29,11 +29,11 @@ public class StubOidcOpApplication extends Application<StubOidcOpConfiguration> 
 
         TokenService tokenService = new TokenService(redisService);
 
-        RequestValidationService requestValidationService = new RequestValidationService(tokenService);
+        RequestValidationService requestValidationService = new RequestValidationService(tokenService, redisService);
         environment.jersey().register(new OidcResource(requestValidationService));
         environment.jersey().register(new TokenResource(tokenService));
         environment.jersey().register(new OidcFormPostResource(requestValidationService));
-        environment.jersey().register(new OidcRegistrationResource(new RegistrationService()));
+        environment.jersey().register(new OidcRegistrationResource(new RegistrationService(redisService)));
         environment.jersey().register(new JsonProcessingExceptionMapper(true));
     }
 

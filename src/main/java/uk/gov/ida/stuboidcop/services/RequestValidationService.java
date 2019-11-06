@@ -4,6 +4,7 @@ import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.ResponseMode;
+import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
@@ -17,9 +18,11 @@ import java.util.Optional;
 public class RequestValidationService {
 
     private final TokenService tokenService;
+    private final RedisService redisService;
 
-    public RequestValidationService(TokenService tokenService) {
+    public RequestValidationService(TokenService tokenService, RedisService redisService) {
         this.tokenService = tokenService;
+        this.redisService = redisService;
     }
 
     public AuthenticationResponse handleAuthenticationRequest(AuthenticationRequest authenticationRequest) {
@@ -78,10 +81,20 @@ public class RequestValidationService {
         } else if (authenticationRequest.getClientID() == null) {
             //3.1.2.1 & 3.1.2.2 (OpenID spec) Client ID is a required field and must be validated
             return Optional.of(new ErrorObject("invalid_request_object", "client ID cannot be null", HttpStatus.BAD_REQUEST_400));
+        } else if (!validateClientID(authenticationRequest.getClientID())) {
+            return Optional.of(new ErrorObject("invalid_request_object", "Client has not been registerd with this OP", HttpStatus.BAD_REQUEST_400));
         } else if(authenticationRequest.getState() == null) {
             //Although Optional in OpenID spec it is expected as defined in FAPI Part 1, section 5.2.3
             return Optional.of(new ErrorObject("invalid_request_object", "state should not be be null", HttpStatus.BAD_REQUEST_400));
         }
         return Optional.empty();
+    }
+
+    private boolean validateClientID(ClientID clientID) {
+        if (redisService.get(clientID.toString()) != null ) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

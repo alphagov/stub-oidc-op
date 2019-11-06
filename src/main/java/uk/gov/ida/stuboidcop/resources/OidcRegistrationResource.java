@@ -1,8 +1,6 @@
 package uk.gov.ida.stuboidcop.resources;
 
-import com.nimbusds.oauth2.sdk.http.HTTPRequest;
-import com.nimbusds.oauth2.sdk.http.ServletUtils;
-import com.nimbusds.openid.connect.sdk.rp.OIDCClientRegistrationRequest;
+import com.nimbusds.jwt.SignedJWT;
 import uk.gov.ida.stuboidcop.http.MultiReadHttpServletRequest;
 import uk.gov.ida.stuboidcop.services.RegistrationService;
 
@@ -14,6 +12,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.text.ParseException;
+import java.util.stream.Collectors;
 
 @Path("/")
 public class OidcRegistrationResource {
@@ -27,15 +27,12 @@ public class OidcRegistrationResource {
     @POST
     @Path("/register")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response register(@Context HttpServletRequest request) {
-        OIDCClientRegistrationRequest registrationRequest;
+    public Response register(@Context HttpServletRequest request) throws IOException, ParseException {
         MultiReadHttpServletRequest multiReadHttpServletRequest = new MultiReadHttpServletRequest(request);
-        try {
-            HTTPRequest httpRequest = ServletUtils.createHTTPRequest(multiReadHttpServletRequest);
-            registrationRequest = registrationService.processHTTPRequest(httpRequest);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return Response.ok(registrationRequest.getOIDCClientMetadata().toJSONObject()).build();
+        final String stringJWT = multiReadHttpServletRequest.getReader().lines().collect(Collectors.joining());
+        SignedJWT signedJWT = SignedJWT.parse(stringJWT);
+        String response = registrationService.processHTTPRequest(signedJWT);
+
+        return Response.ok(response).build();
     }
 }
