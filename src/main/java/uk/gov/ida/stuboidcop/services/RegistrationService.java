@@ -3,22 +3,25 @@ package uk.gov.ida.stuboidcop.services;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.client.ClientInformation;
 import com.nimbusds.oauth2.sdk.client.ClientMetadata;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import net.minidev.json.JSONObject;
 import org.glassfish.jersey.internal.util.Base64;
+import uk.gov.ida.stuboidcop.configuration.StubOidcOpConfiguration;
 
+import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
@@ -28,9 +31,11 @@ import java.util.Date;
 public class RegistrationService {
 
     private final RedisService redisService;
+    private final StubOidcOpConfiguration configuration;
 
-    public RegistrationService(RedisService redisService) {
+    public RegistrationService(RedisService redisService, StubOidcOpConfiguration configuration) {
         this.redisService = redisService;
+        this.configuration = configuration;
     }
 
     private final HttpClient httpClient = HttpClient.newBuilder()
@@ -40,8 +45,8 @@ public class RegistrationService {
         boolean passedValidation = false;
         try {
             passedValidation = validateRegistrationRequest(signedJWT);
-        } catch (ParseException e) {
-            return "Error whilst validating request";
+        } catch (ParseException | CertificateException e) {
+            throw new RuntimeException(e);
         }
 
         if (passedValidation) {
@@ -51,14 +56,19 @@ public class RegistrationService {
         }
     }
 
-    private boolean validateRegistrationRequest(SignedJWT signedJWT) throws java.text.ParseException {
+    private boolean validateRegistrationRequest(SignedJWT signedJWT) throws java.text.ParseException, CertificateException {
         SignedJWT softwareStatement = SignedJWT.parse(signedJWT.getJWTClaimsSet().getClaim("software_statement").toString());
         String softwareJwksEndpoint = softwareStatement.getJWTClaimsSet().getClaim("software_jwks_endpoint").toString();
-        String orgJwksEndpoint = softwareStatement.getJWTClaimsSet().getClaim("org_jwks_endpoint").toString();
-        PublicKey ssaPublicKey = getPublicKeyFromDirectory(softwareJwksEndpoint);
-        PublicKey jwtPublicKey = getPublicKeyFromDirectory(orgJwksEndpoint);
-        boolean passedJWTSignatureValidation = validateJWTSignatureAndAlgorithm(jwtPublicKey, signedJWT);
+
+        URI ssaURI = UriBuilder.fromUri(configuration.getBrokerURI()).path("directory/" + softwareStatement.getJWTClaimsSet().getClaim("software_client_id") + "/key").build();
+        URI softwareURI = UriBuilder.fromUri(softwareJwksEndpoint).build();
+
+        PublicKey ssaPublicKey = getPublicKeyFromDirectoryForSSA(ssaURI);
+        PublicKey jwtPublicKey = getPublicKeyFromDirectoryForRequest(softwareURI);
+
         boolean passedSSASignatureValidation = validateJWTSignatureAndAlgorithm(ssaPublicKey, softwareStatement);
+        boolean passedJWTSignatureValidation = validateJWTSignatureAndAlgorithm(jwtPublicKey, signedJWT);
+
 
         if (passedJWTSignatureValidation && passedSSASignatureValidation) {
             return true;
@@ -67,14 +77,28 @@ public class RegistrationService {
         }
     }
 
-    private PublicKey getPublicKeyFromDirectory(String softwareJwksEndpoint) {
-        HttpResponse<String> response;
+    private PublicKey getPublicKeyFromDirectoryForRequest(URI directoryEndpoint) throws ParseException {
+        HttpResponse<String> response = sendHttpRequest(directoryEndpoint);
+
+        String responseString = response.body();
+
+        JSONObject jsonResponse = JSONObjectUtils.parse(responseString);
+        responseString = jsonResponse.get("signing").toString();
+
+        responseString = responseString.replaceAll("\\n", "").replace("-----BEGIN PUBLIC KEY-----", "").replace("-----END PUBLIC KEY-----", "");
+        byte[] encodedPublicKey = Base64.decode(responseString.getBytes());
+
         try {
-            URI ssaURI = new URI(softwareJwksEndpoint);
-            response = sendHttpRequest(ssaURI);
-        } catch (URISyntaxException e) {
+            X509EncodedKeySpec x509publicKey = new X509EncodedKeySpec(encodedPublicKey);
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            return kf.generatePublic(x509publicKey);
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private PublicKey getPublicKeyFromDirectoryForSSA(URI directoryEndpoint) {
+        HttpResponse<String> response = sendHttpRequest(directoryEndpoint);
 
         String publicKeyString = response.body();
         publicKeyString = publicKeyString.replaceAll("\\n", "").replace("-----BEGIN PUBLIC KEY-----", "").replace("-----END PUBLIC KEY-----", "");
