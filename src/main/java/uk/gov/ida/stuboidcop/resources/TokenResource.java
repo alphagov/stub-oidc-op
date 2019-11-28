@@ -37,7 +37,7 @@ public class TokenResource {
     @Path("/token")
     public Response getProviderTokens(
             @FormParam("code") @NotNull AuthorizationCode authCode) {
-
+        LOG.info("Token end point");
         OIDCTokenResponse response = new OIDCTokenResponse(tokenService.getTokens(authCode));
         return Response.ok(response.toJSONObject()).build();
     }
