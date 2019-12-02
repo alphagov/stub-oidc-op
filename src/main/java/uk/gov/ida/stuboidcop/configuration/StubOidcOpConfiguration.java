@@ -6,13 +6,13 @@ public class StubOidcOpConfiguration extends Configuration {
 
     private String redisURI;
 
-    private String brokerURI;
+    private String directoryURI;
 
     public String getRedisURI() {
         return redisURI;
     }
 
-    public String getBrokerURI() {
-        return brokerURI;
+    public String getDirectoryURI() {
+        return directoryURI;
     }
 }

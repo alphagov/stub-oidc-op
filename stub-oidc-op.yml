@@ -9,4 +9,4 @@ server:
 
 redisURI: ${REDIS_URI:-"redis://192.168.1.7:6379"}
 
-brokerURI: ${BROKER_URI:-"https://directory-prototype.cloudapps.digital/"}
+directoryURI: ${DIRECTORY_URI:-"http://localhost:3000"}

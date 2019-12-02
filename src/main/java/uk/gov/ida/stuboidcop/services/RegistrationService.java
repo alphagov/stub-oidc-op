@@ -60,7 +60,7 @@ public class RegistrationService {
         SignedJWT softwareStatement = SignedJWT.parse(signedJWT.getJWTClaimsSet().getClaim("software_statement").toString());
         String softwareJwksEndpoint = softwareStatement.getJWTClaimsSet().getClaim("software_jwks_endpoint").toString();
 
-        URI ssaURI = UriBuilder.fromUri(configuration.getBrokerURI()).path("directory/" + softwareStatement.getJWTClaimsSet().getClaim("software_client_id") + "/key").build();
+        URI ssaURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path("directory/" + softwareStatement.getJWTClaimsSet().getClaim("software_client_id") + "/key").build();
         URI softwareURI = UriBuilder.fromUri(softwareJwksEndpoint).build();
 
         PublicKey ssaPublicKey = getPublicKeyFromDirectoryForSSA(ssaURI);

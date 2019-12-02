@@ -9,5 +9,6 @@ applications:
       JAVA_HOME: "../.java-buildpack/open_jdk_jre"
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 11.+ } }'
       APPLICATION_PORT: 8080
+      DIRECTORY_URI: https://directory-prototype.cloudapps.digital/
     services:
       - redis-service
