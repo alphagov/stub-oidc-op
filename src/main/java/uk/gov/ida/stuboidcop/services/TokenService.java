@@ -27,8 +27,15 @@ import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import net.minidev.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.gov.ida.stuboidcop.configuration.StubOidcOpConfiguration;
 
-import java.util.Arrays;
+import javax.ws.rs.core.UriBuilder;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.Collections;
 import java.util.Date;
 
 public class TokenService {
@@ -37,9 +44,11 @@ public class TokenService {
 
     private static final String ISSUER = "stub-oidc-op";
     private RedisService redisService;
+    private final StubOidcOpConfiguration configuration;
 
-    public TokenService(RedisService redisService) {
+    public TokenService(RedisService redisService, StubOidcOpConfiguration configuration) {
         this.redisService = redisService;
+        this.configuration = configuration;
     }
 
     public JWT generateAndGetIdToken(AuthorizationCode authCode, AuthenticationRequest authRequest, AccessToken accessToken) {
@@ -48,7 +57,7 @@ public class TokenService {
         IDTokenClaimsSet idTokenClaimsSet = new IDTokenClaimsSet(
                 new Issuer(ISSUER),
                 new Subject(),
-                Arrays.asList(new Audience(authRequest.getClientID())),
+                Collections.singletonList(new Audience(authRequest.getClientID())),
                 new Date(),
                 new Date());
         idTokenClaimsSet.setCodeHash(cHash);
@@ -74,7 +83,11 @@ public class TokenService {
         }
 
         storeTokens(idToken, accessToken, authCode);
-        createUserInfo(accessToken);
+
+        String idpName = authRequest.getCustomParameter("idp-name").get(0);
+        retrieveAndStoreVerifiableCredential(idpName, accessToken);
+
+//        createUserInfo(accessToken);
 
         return idToken;
     }
@@ -94,8 +107,7 @@ public class TokenService {
 
     public AuthorizationCode getAuthorizationCode() {
 
-        AuthorizationCode authCode = new AuthorizationCode();
-        return authCode;
+        return new AuthorizationCode();
     }
 
     public UserInfo getUserInfo(AccessToken accessToken) {
@@ -106,6 +118,10 @@ public class TokenService {
         } catch (java.text.ParseException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public String getVerifiableCredential(AccessToken accessToken) {
+        return redisService.get(accessToken.getValue());
     }
 
     private void storeTokens(JWT idToken, AccessToken accessToken, AuthorizationCode authCode) {
@@ -132,5 +148,22 @@ public class TokenService {
         userInfo.setPhoneNumber("01234567890");
         userInfo.setPhoneNumberVerified(false);
         redisService.set(accessToken.getValue(), userInfo.toJSONObject().toJSONString());
+    }
+
+    private void retrieveAndStoreVerifiableCredential(String idpName, AccessToken accessToken) {
+        URI uri = UriBuilder.fromUri(configuration.getVerifiableCredentialURI()).path("/issue/jwt/credential").queryParam("idp-name", idpName).build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(uri)
+                .build();
+
+        try {
+            HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            redisService.set(accessToken.getValue(), response.body());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+           throw new RuntimeException(e);
+        }
     }
 }

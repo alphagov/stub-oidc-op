@@ -27,7 +27,7 @@ public class StubOidcOpApplication extends Application<StubOidcOpConfiguration> 
     public void run(StubOidcOpConfiguration configuration, Environment environment) {
         RedisService redisService = new RedisService(configuration);
 
-        TokenService tokenService = new TokenService(redisService);
+        TokenService tokenService = new TokenService(redisService, configuration);
 
         RequestValidationService requestValidationService = new RequestValidationService(tokenService, redisService);
         environment.jersey().register(new OidcResource(requestValidationService));

@@ -51,8 +51,9 @@ public class TokenResource {
             //This will need to be used to get the user info but we're not using it for now
             AccessToken accessToken = AccessToken.parse(authorizationHeader);
 
-            UserInfo userInfo = tokenService.getUserInfo(accessToken);
-            return Response.ok(userInfo.toJSONObject()).build();
+//            UserInfo userInfo = tokenService.getUserInfo(accessToken);
+            String verifiableCredential = tokenService.getVerifiableCredential(accessToken);
+            return Response.ok(verifiableCredential).build();
         } catch (ParseException e) {
             throw new RuntimeException("Unable to parse authorization header: " + authorizationHeader + " to access token", e);
         }

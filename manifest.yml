@@ -10,5 +10,6 @@ applications:
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 11.+ } }'
       APPLICATION_PORT: 8080
       DIRECTORY_URI: https://directory-prototype.cloudapps.digital/
+      VERIFIABLE_CREDENTIAL_URI: https://verifiable-credentials-spike.cloudapps.digital
     services:
       - redis-service

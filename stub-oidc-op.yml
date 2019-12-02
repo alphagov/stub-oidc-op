@@ -7,6 +7,8 @@ server:
       port: 5511
 
 
-redisURI: ${REDIS_URI:-"redis://192.168.1.7:6379"}
+redisURI: ${REDIS_URI:-"redis://192.168.204.170:6379"}
 
 directoryURI: ${DIRECTORY_URI:-"http://localhost:3000"}
+
+verifiableCredentialURI: ${VERIFIABLE_CREDENTIAL_URI:-"http://localhost:3002"}
