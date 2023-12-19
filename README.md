@@ -1,5 +1,9 @@
 # stub-oidc-op 
 
+> **Verify has Closed**
+>
+>This repository is out of date and has been archived
+
 Stub OIDC OP is a very simple stub implementation of an OpenID Connect Provider currently using the Hybrid flow. There is currently no Trust Infrastructure in this implementation and it is very much a work in progress.  
 
 Stub OIDC OP uses Redis to store the authentication code, access token and ID token.
